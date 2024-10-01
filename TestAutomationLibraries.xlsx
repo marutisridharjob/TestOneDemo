@@ -1,1 +1,14 @@
 
+Tool / Library	Supports Test Container?	Test Phase						Complexity (0-5)			Upgrade Frequency	Comments
+		Unit	Logic	Integration	End-to-End	Realtime	Reports	Configuration	Learning	Implementation		
+
+
+Arquillian	Yes	Yes	Yes	Yes	Yes	Yes	Yes	5	5	3	2	
+Microshed	Yes	Yes	Yes	Yes	Yes	Yes						
+Atbash	Yes	Yes	Yes	Yes	Yes	Yes	Yes					
+Weld												
+Karate												
+Cucumber												
+Quarkus												Supports MP & Jakarta
+												
+												
