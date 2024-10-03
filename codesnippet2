@@ -1,0 +1,219 @@
+<dependencies>
+    <dependency>
+        <groupId>org.eclipse.microprofile</groupId>
+        <artifactId>microprofile-rest-client</artifactId>
+        <version>4.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>5.10.0</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>io.cucumber</groupId>
+        <artifactId>cucumber-java</artifactId>
+        <version>7.14.0</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>io.cucumber</groupId>
+        <artifactId>cucumber-junit-platform-engine</artifactId>
+        <version>7.14.0</version>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+
+
+
+
+/student-rest-service
+|-- /src
+|   |-- /main
+|       |-- /java
+|           |-- /com/example/student
+|               |-- Student.java
+|               |-- StudentResource.java
+|       |-- /resources
+|           |-- META-INF/microprofile-config.properties
+|-- /test
+|   |-- /java
+|       |-- /com/example/student
+|           |-- StudentResourceTest.java
+|-- /features
+|   |-- student.feature
+|-- pom.xml
+
+
+
+  <project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>student-rest-service</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <dependencies>
+        <!-- MicroProfile Dependency -->
+        <dependency>
+            <groupId>org.eclipse.microprofile</groupId>
+            <artifactId>microprofile-rest-client</artifactId>
+            <version>4.0</version>
+        </dependency>
+
+        <!-- JUnit 5 Dependency -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Cucumber Dependencies -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>7.14.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit-platform-engine</artifactId>
+            <version>7.14.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+
+
+
+  package com.example.student;
+
+public class Student {
+    private String id;
+    private String name;
+
+    // Constructors, getters, and setters
+    public Student(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+
+
+
+
+package com.example.student;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.util.Arrays;
+import java.util.List;
+
+@Path("/students")
+public class StudentResource {
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Student> getStudents() {
+        return Arrays.asList(new Student("1", "Alice"), new Student("2", "Bob"));
+    }
+}
+
+
+
+
+# MicroProfile configuration properties (optional, adjust as needed)
+
+
+
+
+package com.example.student;
+
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import org.junit.jupiter.api.Assertions;
+
+import java.util.List;
+
+public class StudentResourceTest {
+
+    private List<Student> students;
+
+    @Given("The student API is available")
+    public void theStudentApiIsAvailable() {
+        // Typically you'd set up the API endpoint, but we'll assume it's already up
+    }
+
+    @When("I request the list of students")
+    public void iRequestTheListOfStudents() {
+        StudentResource studentResource = new StudentResource();
+        students = studentResource.getStudents();
+    }
+
+    @Then("I should get {int} students")
+    public void iShouldGetNumberOfStudents(int count) {
+        Assertions.assertEquals(count, students.size());
+    }
+
+    @Then("The first student should be {string}")
+    public void theFirstStudentShouldBe(String name) {
+        Assertions.assertEquals(name, students.get(0).getName());
+    }
+}
+
+
+
+
+Feature: Student API
+
+  Scenario: Fetch student list
+    Given The student API is available
+    When I request the list of students
+    Then I should get 2 students
+    And The first student should be "Alice"
+
+
+
+
+  mvn clean install
+
+
+
+mvn test
+
+
