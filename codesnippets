@@ -1,0 +1,452 @@
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── com
+│   │   │       └── example
+│   │   │           ├── controller
+│   │   │           │   └── StudentController.java
+│   │   │           ├── service
+│   │   │           │   └── StudentService.java
+│   │   │           ├── model
+│   │   │           │   └── Student.java
+│   │   └── resources
+│   │       └── META-INF
+│   │           └── beans.xml
+│   ├── test
+│   │   ├── java
+│   │   │   └── com
+│   │   │       └── example
+│   │   │           ├── controller
+│   │   │           │   └── StudentControllerTest.java
+│   │   ├── resources
+│   │   └── features
+│   │       └── student.feature
+
+
+
+
+
+
+public class Student {
+    private String firstName;
+    private String lastName;
+    private int age;
+    private String address;
+    private String city;
+    private String state;
+    private String zipCode;
+    private String phoneNumber;
+
+    // Getters and setters
+}
+
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class StudentService {
+
+    private List<Student> students = List.of(
+        new Student("John", "Doe", 21, "123 St", "NY", "NY", "10001", "1234567890"),
+        // add more mock students
+    );
+
+    public List<Student> findStudents(String param, String value) {
+        return students.stream()
+            .filter(student -> {
+                switch (param) {
+                    case "firstName": return student.getFirstName().equalsIgnoreCase(value);
+                    case "lastName": return student.getLastName().equalsIgnoreCase(value);
+                    case "age": return String.valueOf(student.getAge()).equals(value);
+                    // Add cases for other parameters
+                    default: return false;
+                }
+            })
+            .collect(Collectors.toList());
+    }
+
+    public Student findStudentByName(String name) {
+        return students.stream()
+            .filter(student -> student.getFirstName().equalsIgnoreCase(name))
+            .findFirst()
+            .orElse(null);
+    }
+}
+
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
+
+@Path("/students")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class StudentController {
+
+    private StudentService studentService = new StudentService();
+
+    @GET
+    @Path("/{param}/{value}")
+    public List<Student> getStudents(@PathParam("param") String param, @PathParam("value") String value) {
+        return studentService.findStudents(param, value);
+    }
+
+    @GET
+    @Path("/name/{name}")
+    public Student getStudentByName(@PathParam("name") String name) {
+        return studentService.findStudentByName(name);
+    }
+}
+
+
+
+
+import org.junit.jupiter.api.Test;
+import javax.ws.rs.core.Response;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class StudentControllerTest {
+
+    private StudentController controller = new StudentController();
+
+    @Test
+    public void testGetStudentsByFirstName() {
+        List<Student> students = controller.getStudents("firstName", "John");
+        assertEquals(1, students.size());
+    }
+
+    @Test
+    public void testGetStudentByName() {
+        Student student = controller.getStudentByName("John");
+        assertEquals("Doe", student.getLastName());
+    }
+
+    @Test
+    public void testGetStudentJson() {
+        Student student = controller.getStudentByName("John");
+        String expectedJson = "{\"firstName\":\"John\",\"lastName\":\"Doe\"}";
+        assertEquals(expectedJson, new ObjectMapper().writeValueAsString(student));
+    }
+}
+
+
+
+Feature: Student API
+
+  Scenario Outline: Retrieve list of students based on parameter
+    Given a student with <param> "<value>"
+    When I search for the student by <param>
+    Then I should get <count> students
+
+    Examples:
+      | param    | value   | count |
+      | firstName| John    | 1     |
+      | lastName | Doe     | 1     |
+
+  Scenario: Retrieve a student by name
+    Given a student with name "John"
+    When I search for the student by name "John"
+    Then I should get a student with last name "Doe"
+
+
+
+
+
+
+  import io.cucumber.junit.Cucumber;
+import io.cucumber.junit.CucumberOptions;
+import org.junit.runner.RunWith;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(plugin = {"pretty", "html:target/cucumber-html-report", "json:target/cucumber-json-report.json"})
+public class CucumberTestRunner {
+}
+
+
+
+
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── com
+│   │   │       └── example
+│   │   │           ├── controller
+│   │   │           │   └── StudentController.java
+│   │   │           ├── service
+│   │   │           │   └── StudentService.java
+│   │   │           ├── model
+│   │   │           │   └── Student.java
+│   └── test
+│       ├── java
+│       │   └── com
+│       │       └── example
+│       │           ├── controller
+│       │           │   └── StudentControllerTest.java
+│       │           ├── stepdefs
+│       │           │   └── StudentStepDefinitions.java
+│       ├── resources
+│       │   └── cucumber
+│       │       └── student.feature
+
+
+
+
+
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>student-api</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  
+  <dependencies>
+    <!-- MicroProfile Dependencies -->
+    <dependency>
+      <groupId>org.eclipse.microprofile</groupId>
+      <artifactId>microprofile</artifactId>
+      <version>4.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- JUnit 5 Dependencies -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>5.8.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Cucumber Dependencies -->
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-java</artifactId>
+      <version>7.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-junit-platform-engine</artifactId>
+      <version>7.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-spring</artifactId>
+      <version>7.0.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JSON Processing -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.12.5</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <source>11</source>
+          <target>11</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+
+
+
+
+
+
+
+  public class Student {
+    private String firstName;
+    private String lastName;
+    private int age;
+    private String address;
+    private String city;
+    private String state;
+    private String zipCode;
+    private String phoneNumber;
+
+    // Getters, Setters, Constructors
+}
+
+
+
+
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class StudentService {
+
+    private List<Student> students = new ArrayList<>(List.of(
+        new Student("John", "Doe", 21, "123 St", "NY", "NY", "10001", "1234567890")
+    ));
+
+    public List<Student> findStudents(String param, String value) {
+        return students.stream()
+            .filter(student -> {
+                switch (param) {
+                    case "firstName": return student.getFirstName().equalsIgnoreCase(value);
+                    case "lastName": return student.getLastName().equalsIgnoreCase(value);
+                    case "age": return String.valueOf(student.getAge()).equals(value);
+                    default: return false;
+                }
+            }).collect(Collectors.toList());
+    }
+
+    public Student addStudent(Student student) {
+        students.add(student);
+        return student;
+    }
+
+    public Student updateStudent(String name, Student newStudent) {
+        for (Student student : students) {
+            if (student.getFirstName().equalsIgnoreCase(name)) {
+                student.setLastName(newStudent.getLastName());
+                student.setAge(newStudent.getAge());
+                student.setAddress(newStudent.getAddress());
+                student.setCity(newStudent.getCity());
+                student.setState(newStudent.getState());
+                student.setZipCode(newStudent.getZipCode());
+                student.setPhoneNumber(newStudent.getPhoneNumber());
+                return student;
+            }
+        }
+        return null;
+    }
+
+    public boolean deleteStudent(String name) {
+        return students.removeIf(student -> student.getFirstName().equalsIgnoreCase(name));
+    }
+}
+
+
+
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
+
+@Path("/students")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class StudentController {
+
+    private StudentService studentService = new StudentService();
+
+    @GET
+    @Path("/{param}/{value}")
+    public List<Student> getStudents(@PathParam("param") String param, @PathParam("value") String value) {
+        return studentService.findStudents(param, value);
+    }
+
+    @POST
+    public Student addStudent(Student student) {
+        return studentService.addStudent(student);
+    }
+
+    @PUT
+    @Path("/{name}")
+    public Student updateStudent(@PathParam("name") String name, Student student) {
+        return studentService.updateStudent(name, student);
+    }
+
+    @DELETE
+    @Path("/{name}")
+    public boolean deleteStudent(@PathParam("name") String name) {
+        return studentService.deleteStudent(name);
+    }
+}
+
+
+
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class StudentControllerTest {
+
+    private StudentController controller = new StudentController();
+
+    @Test
+    public void testAddStudent() {
+        Student student = new Student("Jane", "Doe", 22, "456 St", "LA", "CA", "90001", "0987654321");
+        Student added = controller.addStudent(student);
+        assertEquals("Jane", added.getFirstName());
+    }
+
+    @Test
+    public void testUpdateStudent() {
+        Student student = new Student("John", "Smith", 25, "789 St", "NY", "NY", "10002", "2345678901");
+        Student updated = controller.updateStudent("John", student);
+        assertEquals("Smith", updated.getLastName());
+    }
+
+    @Test
+    public void testDeleteStudent() {
+        boolean deleted = controller.deleteStudent("John");
+        assertTrue(deleted);
+    }
+
+    @Test
+    public void testGetStudentsByFirstName() {
+        List<Student> students = controller.getStudents("firstName", "John");
+        assertEquals(1, students.size());
+    }
+}
+
+
+
+
+Feature: Student CRUD operations
+
+  Scenario: Add a new student
+    Given I add a student with first name "Jane"
+    Then the student "Jane" should be added
+
+  Scenario: Update a student
+    Given a student named "John" exists
+    When I update the student's last name to "Smith"
+    Then the student's last name should be "Smith"
+
+  Scenario: Delete a student
+    Given a student named "John" exists
+    When I delete the student "John"
+    Then the student "John" should be deleted
+
+
+import io.cucumber.java.en.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class StudentStepDefinitions {
+
+    private StudentController controller = new StudentController();
+    private Student student;
+    private boolean isDeleted;
+
+    @Given("I add a student with first name {string}")
+    public void i_add_a_student(String firstName) {
+        student = new Student(firstName, "Doe", 22, "456 St", "LA", "CA", "90001", "0987654321
+
+
+
+
